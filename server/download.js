@@ -3,6 +3,11 @@ import fs from "fs"
 
 const yt = new Ytdl({ timeoutMs: 3 * 60 * 1000 })
 
+if (process.env.YOUTUBE_COOKIE) {
+  yt.setCookie(process.env.YOUTUBE_COOKIE)
+  console.log("YouTube: cookie de autenticação configurado")
+}
+
 export const download = (videoId) =>
   new Promise(async (resolve, reject) => {
     const videoURL = "https://www.youtube.com/shorts/" + videoId
