@@ -1,5 +1,9 @@
 import axios from "axios"
 
 export const server = axios.create({
-  baseURL: "http://localhost:3333",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    (window.location.hostname === "localhost"
+      ? "http://localhost:3333"
+      : ""),
 })

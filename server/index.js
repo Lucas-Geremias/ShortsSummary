@@ -10,6 +10,8 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }))
+
 app.get("/summary/:id", async (req, res) => {
   try {
     await download(req.params.id)
@@ -35,4 +37,10 @@ app.post("/summary", async (req, res) => {
   }
 })
 
-app.listen(3333, () => console.log("Server is running http://localhost:3333/"))
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static("./dist"))
+  app.get("*", (_req, res) => res.sendFile("dist/index.html", { root: "." }))
+}
+
+const port = process.env.PORT || 3333
+app.listen(port, () => console.log(`Server is running on port ${port}`))

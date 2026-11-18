@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "web": "vite",
+    "build": "vite build",
+    "start": "node --no-warnings server/index.js",
     "server": "env YTDL_NO_UPDATE=1 node --watch --no-warnings server/index.js"
   },
   "dependencies": {
