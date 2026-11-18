@@ -6,19 +6,41 @@ export const download = (videoId) =>
     const videoURL = "https://www.youtube.com/shorts/" + videoId
     console.log("Realizando o download do video: ", videoId)
 
-    ytdl(videoURL, { quality: "lowestaudio", filter: "audioonly" })
-      // .on("info", (info) => {
-      //   const seconds = info.formats[0].approxDurationMs / 1000
+    let settled = false
+    const stream = ytdl(videoURL, {
+      quality: "lowestaudio",
+      filter: "audioonly",
+    })
 
-      //   if (seconds > 60) {
-      //     throw new Error("A duração desse vídeo é maior do que 60 segundos.")
-      //   }
-      // })
+    const timeout = setTimeout(() => {
+      if (settled) return
+      settled = true
+      stream.destroy()
+      reject(new Error("Tempo limite ao baixar o áudio do YouTube"))
+    }, 3 * 60 * 1000)
+
+    stream
+      .on("info", (info) => {
+        const duration = Number(info.videoDetails.lengthSeconds)
+        if (duration > 60) {
+          if (settled) return
+          settled = true
+          clearTimeout(timeout)
+          stream.destroy()
+          reject(new Error("O vídeo possui mais de 60 segundos"))
+        }
+      })
       .on("end", () => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
         console.log("Download do vídeo finalizado...")
         resolve()
       })
       .on("error", (error) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
         console.log(
           "Não foi possível fazer o download do vídeo. Detalhes do erro: ",
           error

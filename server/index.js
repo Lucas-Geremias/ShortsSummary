@@ -22,18 +22,33 @@ app.get("/summary/:id", async (req, res) => {
     return res.json({ result })
   } catch (error) {
     console.log(error)
-    return res.json({ error })
+    const message = error instanceof Error ? error.message : String(error)
+    return res.status(502).json({
+      error: message,
+      stage: "download/transcription",
+    })
   }
 })
 
 app.post("/summary", async (req, res) => {
   try {
+    if (!req.body.text || req.body.text.trim().length < 10) {
+      return res.status(400).json({
+        error: "Não foi possível gerar o resumo: texto insuficiente.",
+        stage: "summary",
+      })
+    }
+
     const result = await summarize(req.body.text)
 
     return res.json({ result })
   } catch (error) {
     console.log(error)
-    return res.json({ error })
+    const message = error instanceof Error ? error.message : String(error)
+    return res.status(502).json({
+      error: message,
+      stage: "summary",
+    })
   }
 })
 

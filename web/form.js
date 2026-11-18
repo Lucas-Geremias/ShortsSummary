@@ -11,22 +11,42 @@ form.addEventListener("submit", async (event) => {
   const videoURL = input.value
 
   if (!videoURL.includes("shorts")) {
-    return (content.textContent = "Informe uma url de short válida.")
+    content.textContent = "Informe uma url de short válida."
+    content.classList.remove("placeholder")
+    return
   }
 
   const [_, params] = videoURL.split("/shorts/")
-  const [videoID] = params.split("?si")
+  const [videoID] = params?.split("?si") || []
 
-  content.textContent = "Obtendo o texto do áudio..."
+  if (!videoID) {
+    content.textContent = "Não foi possível identificar o short."
+    content.classList.remove("placeholder")
+    return
+  }
 
-  const transcription = await server.get("/summary/" + videoID)
+  try {
+    content.textContent = "Obtendo o texto do áudio..."
 
-  content.textContent = "Realizando o resumo..."
+    const transcription = await server.get("/summary/" + videoID)
 
-  const summary = await server.post("/summary", {
-    text: transcription.data.result,
-  })
+    content.textContent = "Realizando o resumo..."
 
-  content.textContent = summary.data.result
-  content.classList.remove("placeholder")
+    const summary = await server.post("/summary", {
+      text: transcription.data.result,
+    })
+
+    content.textContent = summary.data.result
+  } catch (error) {
+    const apiError = error.response?.data?.error
+    const stage = error.response?.data?.stage
+
+    content.textContent =
+      apiError ||
+      (stage
+        ? `Falha durante ${stage}.`
+        : "O resumo excedeu o tempo limite. Aguarde o servidor ficar pronto e tente novamente.")
+  } finally {
+    content.classList.remove("placeholder")
+  }
 })
