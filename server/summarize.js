@@ -1,16 +1,27 @@
 import { pipeline } from "@xenova/transformers"
 
+let summarizationPipeline
+
 export async function summarize(text) {
   try {
     console.log("Realizando o resumo...")
 
-    const generator = await pipeline("summarization", "Xenova/bart-large-cnn")
+    summarizationPipeline ??= await pipeline(
+      "summarization",
+      "Xenova/distilbart-cnn-6-6"
+    )
 
-    const output = await generator(text)
+    const output = await summarizationPipeline(text, {
+      max_new_tokens: 50,
+      min_length: 10,
+    })
 
     console.log("Resumo concluido com sucesso")
 
-    return output[0].summary_text
+    const summary = output[0].summary_text.trim()
+    const firstSentence = summary.match(/^[^.!?]+[.!?]?/)
+
+    return firstSentence?.[0].trim() || summary
   } catch (error) {
     console.log("Não foi possível realizar o resumo", error)
     throw new Error(error)
